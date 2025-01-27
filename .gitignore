@@ -1,0 +1,13 @@
+# Exclude node_modules
+server/node_modules/
+client/node_modules/
+
+# Exclude environment variables
+server/.env
+client/.env
+
+# Exclude build files (dacă adaugi frontend mai târziu)
+client/dist/
+
+# System files
+.DS_Store
