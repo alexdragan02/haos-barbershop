@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
+const authRoutes=require('./auth')
+
 
 const app = express();
 
@@ -10,13 +12,13 @@ app.use(morgan("dev"));
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); 
 
+
+
+app.use('/auth',authRoutes);
 app.get("/", (req, res) => {
-  res.send("Serverul functioneazz! Bine ai venit la Haos Barbershop API.");
+  res.send(" Haos Barbershop");
 });
+
 
 module.exports = app;
 
-
-app.get("/barbers",(req,res)=>{
-    res.send("Ceva mesaj de controll");
-})

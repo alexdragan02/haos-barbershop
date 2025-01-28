@@ -11,3 +11,6 @@ client/dist/
 
 # System files
 .DS_Store
+
+#
+server/src/haos-barbershop-firebase-adminsdk-fbsvc-89007e0901.json
