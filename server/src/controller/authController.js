@@ -126,5 +126,32 @@ const login= async (req,res)=>{
 }
 
 
+    const getUsers = async (req, res) => {
+        try {
+            const { role } = req.query; 
+            let usersRef = db.collection('users');
+    
+            if (role) {
+                usersRef = usersRef.where('role', '==', role);
+            }
+    
+            const snapshot = await usersRef.get();
+    
+            if (snapshot.empty) {
+                return res.status(404).json({ message: 'nu am gasit useri' });
+            }
+    
+            const users = snapshot.docs.map(doc => ({
+                id: doc.id, 
+                ...doc.data()
+            }));
+    
+            res.status(200).json({ users });
+        } catch (err) {
+            console.error("eroare la preluare utilizatori", err);
+            res.status(500).json({ message: 's-a produs eroare la preluarea utilizatorilor' });
+        }
+    };
+    
 
-module.exports={register,registerBarber,login};
+module.exports={register,registerBarber,login,getUsers};

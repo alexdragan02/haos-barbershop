@@ -56,7 +56,6 @@ const addPackages=async (req,res)=>{
         name,
         totalPrice,
         totalDuration,
-        totalPrice,
         finalPrice,
         services:serviceDocs,
         metadata:{
