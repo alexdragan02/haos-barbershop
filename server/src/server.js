@@ -8,6 +8,5 @@ const server=http.createServer(app);
 
 server.listen(PORT,()=>{
     console.log(`merge treaba la http://localhost:${PORT}`);
-    console.log(process.env.JWT_SECRET); // Ar trebui să afișeze cheia secretă
 
 })

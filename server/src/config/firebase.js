@@ -1,6 +1,6 @@
 const admin=require("firebase-admin");
 
-const serviceAccount=require("./haos-barbershop-firebase-adminsdk-fbsvc-89007e0901.json");
+const serviceAccount=require("../haos-barbershop-firebase-adminsdk-fbsvc-89007e0901.json");
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
