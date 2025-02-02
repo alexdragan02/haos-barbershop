@@ -2,9 +2,21 @@
     <v-container class="content">
       <v-card class="pa-5">
         <v-card-title class="text-h4 text-center">Programarile Mele</v-card-title>
+        
+        <v-row class="mb-3">
+          <v-col cols="12" md="4">
+            <v-select
+              v-model="selectedFilter"
+              :items="filterOptions"
+              label="Filtreaza dupa"
+              variant="outlined"
+            ></v-select>
+          </v-col>
+        </v-row>
+  
         <v-card-text>
-          <v-row v-if="appointments.length > 0">
-            <v-col v-for="appointment in appointments" :key="appointment.id" cols="12" sm="6" md="4">
+          <v-row v-if="filteredAppointments.length > 0">
+            <v-col v-for="appointment in filteredAppointments" :key="appointment.id" cols="12" sm="6" md="4">
               <v-card class="appointment-card">
                 <v-card-title class="text-center text-h5 font-weight-bold">
                   {{ appointment.date }}
@@ -56,21 +68,21 @@
   
       <v-dialog v-model="editDialog" max-width="500">
         <v-card>
-          <v-card-title class="text-h5">Editează programarea</v-card-title>
+          <v-card-title class="text-h5">Editeaza programarea</v-card-title>
           <v-card-text>
             <v-form ref="editForm">
               <v-text-field v-model="editedAppointment.date" label="Data" type="date" variant="outlined" @change="fetchAvailableHours"></v-text-field>
   
               <v-select label="Frizer" v-model="editedAppointment.barberId" :items="barbers" item-title="firstName" item-value="id" variant="outlined" @update:modelValue="fetchAvailableHours"></v-select>
   
-              <v-select label="Ora Disponibilă" v-model="editedAppointment.timeSlot" :items="availableHours" variant="outlined" :disabled="availableHours.length === 0"></v-select>
+              <v-select label="Ora Disponibila" v-model="editedAppointment.timeSlot" :items="availableHours" variant="outlined" :disabled="availableHours.length === 0"></v-select>
   
               <v-select label="Serviciu" v-model="editedAppointment.serviceId" :items="services" item-title="name" item-value="id" variant="outlined"></v-select>
             </v-form>
           </v-card-text>
           <v-card-actions class="justify-end">
             <v-btn color="red" @click="editDialog = false">Anuleaza</v-btn>
-            <v-btn color="green" @click="updateAppointment">Salveaza </v-btn>
+            <v-btn color="green" @click="updateAppointment">Salveaza</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -78,7 +90,7 @@
   </template>
   
   <script>
-  import { ref, onMounted } from "vue";
+  import { ref, onMounted, computed } from "vue";
   import api from "../api";
   
   export default {
@@ -89,6 +101,8 @@
       const availableHours = ref([]);
       const editDialog = ref(false);
       const editedAppointment = ref({});
+      const selectedFilter = ref("Recente");
+      const filterOptions = ref(["Recente", "Pret crescator", "Pret descrescator"]);
   
       const clientId = localStorage.getItem("userId");
   
@@ -97,7 +111,7 @@
           const response = await api.get(`/appointments/getAppointmentsByClient/${clientId}`);
           appointments.value = response.data.appointments || [];
         } catch (error) {
-          console.error("Eroare la preluarea programărilor", error);
+          console.error("Eroare la preluarea programarilor", error);
         }
       };
   
@@ -160,20 +174,31 @@
           editDialog.value = false;
           fetchAppointments();
         } catch (error) {
-          alert("Eroare la actualizarea programarii!!!");
+          alert("Eroare la actualizarea programarii!");
         }
       };
   
       const deleteAppointment = async (appointmentId) => {
-        if (!confirm("Vrei sa stergi programarea programare?")) return;
+        if (!confirm("Vrei sa stergi programarea?")) return;
         try {
           await api.delete(`/appointments/deleteAppointment/${appointmentId}`);
           appointments.value = appointments.value.filter(a => a.id !== appointmentId);
           alert("Programarea a fost stearsa!");
         } catch (error) {
-          alert("Eroare la stergerea dorita!");
+          alert("Eroare la stergerea programarii!");
         }
       };
+  
+      const filteredAppointments = computed(() => {
+        if (selectedFilter.value === "Recente") {
+          return [...appointments.value].sort((a, b) => new Date(b.date) - new Date(a.date));
+        } else if (selectedFilter.value === "Pret crescator") {
+          return [...appointments.value].sort((a, b) => a.totalPrice - b.totalPrice);
+        } else if (selectedFilter.value === "Pret descrescator") {
+          return [...appointments.value].sort((a, b) => b.totalPrice - a.totalPrice);
+        }
+        return appointments.value;
+      });
   
       onMounted(() => {
         fetchAppointments();
@@ -181,11 +206,10 @@
         fetchServices();
       });
   
-      return { appointments, barbers, services, availableHours, editDialog, editedAppointment, openEditDialog, fetchAvailableHours, updateAppointment, deleteAppointment };
+      return { appointments, barbers, services, availableHours, editDialog, editedAppointment, openEditDialog, fetchAvailableHours, updateAppointment, deleteAppointment, selectedFilter, filterOptions, filteredAppointments };
     },
   };
   </script>
-  
   
   <style scoped>
   .content {
