@@ -51,7 +51,6 @@ export default {
           phoneNumber: phoneNumber.value,
         });
 
-        alert("Înregistrare reusita! Poti sa te autentifici.");
         emit("toggleForm"); 
 
       } catch (error) {

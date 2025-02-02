@@ -1,22 +1,28 @@
 const db=require('../config/firebase.js');
 
-const getPackages=async (req,res)=>{
-    try{
-        const packagesRef=db.collection('packages');
-    const snapshot=await packagesRef.get();
 
-    if(snapshot.empty){
-       return  res.status(404).json({message:"nu exista pachete inca"});
+const getPackages = async (req, res) => {
+    try {
+        const packagesRef = db.collection("packages");
+        const snapshot = await packagesRef.get();
+
+        if (snapshot.empty) {
+            return res.status(404).json({ message: "Nu exista pachete" });
+        }
+
+        const packages = snapshot.docs.map(doc => ({
+            id: doc.id, 
+            ...doc.data()
+        }));
+
+        res.status(200).json(packages);
+    } catch (err) {
+        res.status(500).json({ message: "Eroare la preluarea pachetelor" });
     }
+};
 
-    const packages=snapshot.docs.map(doc=>({id:doc.id, ...doc.data()}));
+module.exports = { getPackages };
 
-    res.status(200).json(packages);
-    }catch(err){
-        res.status(500).json({message:"eroare la preluarea pachetelor"});
-
-    }
-}
 
 const addPackages=async (req,res)=>{
     try{
@@ -70,5 +76,56 @@ const addPackages=async (req,res)=>{
     res.status(500).json({message:"eroare la adaugare", err});
     }
 }
+const updatePackageById = async (req, res) => {
+    try {
+        const { packageId } = req.params;
+        const updatedData = req.body;
 
-module.exports={getPackages,addPackages};
+        if (!packageId) {
+            return res.status(400).json({ message: "ID pachet necesar" });
+        }
+
+        const packageRef = db.collection('packages').doc(packageId);
+        const doc = await packageRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: "Pachetul nu exista" });
+        }
+
+        updatedData.metadata = {
+            ...doc.data().metadata,
+            updatedAt: new Date().toISOString(),
+        };
+
+        await packageRef.update(updatedData);
+
+        res.status(200).json({ message: "Pachet actualizat cu succes" });
+    } catch (err) {
+        console.error("Eroare la actualizarea pachetului", err);
+        res.status(500).json({ message: "Eroare la actualizare pachet" });
+    }
+};
+
+const deletePackageById = async (req, res) => {
+    try {
+        const { packageId } = req.params;
+
+        if (!packageId) {
+            return res.status(400).json({ message: "ID pachet necesar" });
+        }
+
+        const packageRef = db.collection('packages').doc(packageId);
+        const doc = await packageRef.get();
+
+        if (!doc.exists) {
+            return res.status(404).json({ message: "Pachetul nu exista" });
+        }
+
+        await packageRef.delete();
+        res.status(200).json({ message: "Pachet sters cu succes" });
+    } catch (err) {
+        console.error("Eroare la stergerea pachetului", err);
+        res.status(500).json({ message: "Eroare la stergere pachet" });
+    }
+};
+module.exports={getPackages,addPackages,updatePackageById,deletePackageById};
