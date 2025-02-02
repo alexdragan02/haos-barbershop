@@ -1,5 +1,6 @@
 const express=require('express');
-const {getAppointments,getAppointmentsByBarber,getAllAppointmentsForBarber,addAppointments,getAppointmentsByClient,deleteAppointment,updateAppointment}=require('../controller/appointmentController');
+const {getAppointments,getAppointmentsByBarber,getAllAppointmentsForBarber,addAppointments,getAppointmentsByClient
+    ,deleteAppointment,updateAppointment,generateAppointments}=require('../controller/appointmentController');
 
 
 router=express.Router();
@@ -11,4 +12,5 @@ router.post('/addAppointments',addAppointments);
 router.get('/getAppointmentsByClient/:clientId',getAppointmentsByClient);
 router.delete('/deleteAppointment/:appointmentId',deleteAppointment);
 router.put('/updateAppointment/:appointmentId',updateAppointment)
+router.post('/generate',generateAppointments);
 module.exports=router;

@@ -1,4 +1,7 @@
 const db = require('../config/firebase.js');
+const { faker } = require('@faker-js/faker');
+
+
 
 const getAppointments = async (req, res) => {
     try {
@@ -304,4 +307,84 @@ const updateAppointment = async (req, res) => {
     }
 };
 
-module.exports = { getAppointments,getAppointmentsByBarber,getAllAppointmentsForBarber, addAppointments,getAppointmentsByClient,deleteAppointment,updateAppointment };
+
+
+const generateAppointments = async (req, res) => {
+    try {
+        const count = req.body.count || 20; 
+        const appointmentsRef = db.collection('appointments');
+        const usersRef = db.collection('users');
+        const servicesRef = db.collection('services');
+
+        const barbersSnapshot = await usersRef.where("role", "==", "barber").get();
+        const clientsSnapshot = await usersRef.where("role", "==", "client").get();
+        const servicesSnapshot = await servicesRef.get();
+
+        if (barbersSnapshot.empty || clientsSnapshot.empty || servicesSnapshot.empty) {
+            return res.status(400).json({ message: "Nu exista frizeri sau clienti sau servicii in baza de date." });
+        }
+
+        const barbers = barbersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const clients = clientsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const services = servicesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        console.log("Barbers list:", barbers);
+        console.log("Clients list:", clients);
+        console.log("Services list:", services);
+
+        for (let i = 0; i < count; i++) {
+            const randomBarber = faker.helpers.arrayElement(barbers);
+            const randomClient = faker.helpers.arrayElement(clients);
+            const randomService = faker.helpers.arrayElement(services);
+
+            if (!randomBarber || !randomClient || !randomService) {
+                console.error("Eroare nu sunt frizeri servicii sau clienti disponibili");
+                continue;
+            }
+
+            const date = faker.date.future();
+            const timeSlot = `${faker.number.int({ min: 9, max: 17 })}:${faker.helpers.arrayElement(["00", "30"])}`;
+
+            const [hours, minutes] = timeSlot.split(":").map(Number);
+            const finishTime = new Date(date);
+            finishTime.setHours(hours);
+            finishTime.setMinutes(minutes + randomService.duration);
+            const formattedFinishTime = finishTime.toTimeString().slice(0, 5);
+
+            const appointment = {
+                clientId: randomClient.id,
+                clientName: `${randomClient.firstName} ${randomClient.lastName}`,
+                clientPhone: randomClient.phoneNumber,
+
+                barberId: randomBarber.id,
+                barberName: `${randomBarber.firstName} ${randomBarber.lastName}`,
+                barberPhone: randomBarber.phoneNumber,
+
+                serviceId: randomService.id,
+                serviceName: randomService.name,
+                packageId: null,
+                packageName: null,
+
+                date: date.toISOString().split("T")[0],
+                timeSlot,
+                finishTime: formattedFinishTime,
+                totalPrice: randomService.price,
+                totalDuration: randomService.duration,
+                status: faker.helpers.arrayElement(["pending", "confirmed", "completed"]),
+                createdAt: new Date().toISOString(),
+            };
+
+            await appointmentsRef.add(appointment);
+        }
+
+        res.status(201).json({ message: `${count} programari generate ` });
+    } catch (err) {
+        console.error("Eroare la generare programari:", err);
+        res.status(500).json({ message: "Eroare la generare programari" });
+    }
+};
+
+
+
+module.exports = { getAppointments,getAppointmentsByBarber,getAllAppointmentsForBarber, 
+    addAppointments,getAppointmentsByClient,deleteAppointment,updateAppointment,generateAppointments };
