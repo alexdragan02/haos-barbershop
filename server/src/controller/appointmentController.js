@@ -237,24 +237,71 @@ const updateAppointment = async (req, res) => {
         const appointmentDoc = await appointmentRef.get();
 
         if (!appointmentDoc.exists) {
-            return res.status(404).json({ message: "Programarea nu exista!" });
+            return res.status(404).json({ message: "Programarea nu exista!!!!" });
         }
 
-        const updatedData = {};
+        let updatedData = {
+            date,
+            timeSlot,
+            barberId,
+            serviceId,
+            packageId,
+        };
 
-        if (date) updatedData.date = date;
-        if (timeSlot) updatedData.timeSlot = timeSlot;
-        if (barberId) updatedData.barberId = barberId;
-        if (serviceId) updatedData.serviceId = serviceId;
-        if (packageId) updatedData.packageId = packageId;
+        if (barberId) {
+            const barberDoc = await db.collection('users').doc(barberId).get();
+            if (barberDoc.exists) {
+                const barberData = barberDoc.data();
+                updatedData.barberName = `${barberData.firstName} ${barberData.lastName}`;
+                updatedData.barberPhone = barberData.phoneNumber;
+            } else {
+                return res.status(400).json({ message: "Frizerul selectat nu exista" });
+            }
+        }
+
+        let totalDuration = 0;
+        let totalPrice = 0;
+        if (serviceId) {
+            const serviceDoc = await db.collection('services').doc(serviceId).get();
+            if (serviceDoc.exists) {
+                const serviceData = serviceDoc.data();
+                updatedData.serviceName = serviceData.name;
+                totalDuration = serviceData.duration;
+                totalPrice = serviceData.price;
+            } else {
+                return res.status(400).json({ message: "Serviciul selectat nu exista" });
+            }
+        } else if (packageId) {
+            const packageDoc = await db.collection('packages').doc(packageId).get();
+            if (packageDoc.exists) {
+                const packageData = packageDoc.data();
+                updatedData.packageName = packageData.name;
+                totalDuration = packageData.totalDuration;
+                totalPrice = packageData.finalPrice;
+            } else {
+                return res.status(400).json({ message: "Pachetul selectat nu exista" });
+            }
+        }
+
+        if (timeSlot) {
+            const [hours, minutes] = timeSlot.split(":").map(Number);
+            const finishTime = new Date(date);
+            finishTime.setHours(hours);
+            finishTime.setMinutes(minutes + totalDuration);
+            updatedData.finishTime = finishTime.toTimeString().slice(0, 5);
+        }
+
+        updatedData.totalDuration = totalDuration;
+        updatedData.totalPrice = totalPrice;
 
         await appointmentRef.update(updatedData);
 
-        res.status(200).json({ message: "Programarea a fost actualizata", updatedData });
+        res.status(200).json({ message: "Programarea a fost actualizata cu success!!!", updatedData });
 
     } catch (err) {
-        console.error("Eroare la actualizarea programarii:", err);
+        console.error("Eroare la actualizare!!!", err);
         res.status(500).json({ message: "Eroare la actualizarea programarii" });
     }
 };
+
 module.exports = { getAppointments,getAppointmentsByBarber,getAllAppointmentsForBarber, addAppointments,getAppointmentsByClient,deleteAppointment,updateAppointment };
