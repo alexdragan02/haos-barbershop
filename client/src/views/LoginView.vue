@@ -1,7 +1,9 @@
 <template>
     <v-container class="fill-height d-flex justify-center align-center">
       <v-card class="pa-5" width="400">
-        <v-card-title class="text-center text-h5">{{ showRegister ? "Register" : "Login" }}</v-card-title>
+        <v-card-title class="text-center text-h5">
+          {{ showRegister ? "Register" : "Login" }}
+        </v-card-title>
   
         <v-card-text>
           <v-form ref="form">
@@ -59,6 +61,7 @@
           localStorage.setItem("token", response.data.token);
           localStorage.setItem("role", role);
           localStorage.setItem("userId", userId);
+  
           if (role === "client") router.push("/client/appointments");
           else if (role === "barber") router.push("/barber/appointments");
           else {
@@ -81,6 +84,7 @@
             phoneNumber: phoneNumber.value,
           });
           showRegister.value = false;
+          alert("te ai intregistrat cu success!!!");
         } catch (error) {
           alert("Eroare la inregistrare: " + (error.response?.data?.message));
         }

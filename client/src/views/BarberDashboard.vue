@@ -30,8 +30,7 @@ export default {
         router.push("/login"); 
       }
     });
-
-    return { drawer };
+    return { drawer};
   },
 };
 </script>

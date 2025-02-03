@@ -12,7 +12,6 @@
                     @change="fetchAppointments"
                 ></v-text-field>
 
-                <!-- 🔥 Buton pentru a vedea toate programările -->
                 <v-btn color="primary" block class="mt-3" @click="fetchAllAppointments">
                     Vezi toate programarile
                 </v-btn>

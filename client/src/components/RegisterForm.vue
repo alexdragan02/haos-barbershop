@@ -1,7 +1,6 @@
 <template>
   <v-container class="fill-height d-flex justify-center align-center">
     <v-card class="pa-5" width="400">
-      <v-card-title class="text-center text-h5">Register</v-card-title>
 
       <v-card-text>
         <v-form ref="form">
@@ -12,37 +11,34 @@
           <v-text-field v-model="password" label="Parola" type="password" variant="outlined" prepend-icon="mdi-lock" required></v-text-field>
           <v-text-field v-model="phoneNumber" label="Telefon" type="tel" variant="outlined" prepend-icon="mdi-phone" required></v-text-field>
 
-          <v-btn color="primary" block @click="register">
-            Creeaza cont
-          </v-btn>
+          <v-btn color="primary" block @click="register">Creeaza cont</v-btn>
         </v-form>
       </v-card-text>
-
-      <v-card-actions class="justify-center">
-        <p>Ai un cont deja?
-          <a href="#" @click.prevent="emit('toggleForm')">Login</a>
-        </p>
-      </v-card-actions>
     </v-card>
   </v-container>
 </template>
 
 <script>
 import { ref } from "vue";
-import api from "../api"; 
+import { useStore } from "vuex";
 
 export default {
   setup(props, { emit }) {
+    const store = useStore();
+
     const username = ref("");
     const firstName = ref("");
     const lastName = ref("");
     const email = ref("");
     const password = ref("");
     const phoneNumber = ref("");
+    const errorMessage = ref("");
 
     const register = async () => {
+      errorMessage.value = "";
+
       try {
-        await api.post("/auth/register", { 
+        await store.dispatch("auth/register", {
           username: username.value,
           firstName: firstName.value,
           lastName: lastName.value,
@@ -51,10 +47,11 @@ export default {
           phoneNumber: phoneNumber.value,
         });
 
-        emit("toggleForm"); 
+        alert("Cont creat cu succes!!!");
+        emit("toggleForm");
 
       } catch (error) {
-        alert("Eroare la inregistrare: " + (error.response?.data?.message ));
+        errorMessage.value = error.message || "Eroare la inregistrare!";
       }
     };
 
